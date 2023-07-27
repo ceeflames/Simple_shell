@@ -1,107 +1,87 @@
 #include "shell.h"
 /**
- * _strcpyp - copies word to buffer
- * @str1: buff
- * @str2: pointer to word
- *
- * Return: buffer
+ * _strtok - tokenizes a string
+ * @str: string to be separated
+ * @delim: list of characters used to separate strings
+ * Return: pointer to tokenized string
  */
-char *_strcpyp(char *str1, char *str2)
+char *_strtok(char *str, char *delim)
 {
-	char *ptr1 = str1, *ptr2 = str2;
+	static char *pt;
+	int i, j;
+	int str_len, delim_len;
+	int found_delim = 0;
 
-	while (*ptr2 && *ptr2 != ' ')
+	if (str != NULL)
+		pt = str;
+	else
 	{
-		*ptr1 = *ptr2;
-		ptr1++;
-		ptr2++;
+		if (pt == NULL)
+			return (NULL);
+		str = pt;
 	}
-	*ptr1 = '\0';
+	str_len = _strlen(str);
+	delim_len = _strlen(delim);
+
+	for (i = 0; i < str_len; i++)
+	{
+		for (j = 0; j < delim_len; j++)
+		{
+			if (str[i] == delim[j])
+			{
+				str[i] = '\0';
+				found_delim = 1;
+				break;
+			}
+		}
+		if (found_delim)
+		{
+			found_delim = 0;
+			break;
+		}
+	}
+
+	pt = (i < str_len) ? &str[i + 1] : (NULL);
+	return (str);
+}
+
+/**
+ * _strdup - returns a pointer to a newly allocated
+ * space in memory
+ * @str: string
+ * Return: character pointer
+ */
+char *_strdup(char *str)
+{
+	int k, j;
+	char *str1;
+
+	if (str == NULL)
+		return (NULL);
+	k = _strlen(str);
+	str1 = malloc(k + 1);
+	if (str1 == NULL)
+		return (NULL);
+	for (j = 0; j < k; j++)
+		str1[j] = str[j];
+	str1[j] = '\0';
 	return (str1);
 }
 /**
- * _strcpy - copies content of str2 to str1
- * @str1: first string
- * @str2: second str
- *
- * Return: str1
+ * env_func - prints the environment variables
+ * @arg: argument tokens
+ * Return: 0 because its not necessary
  */
-char *_strcpy(char *str1, char *str2)
+char env_func(char **arg)
 {
-	char *ptr1 = str1, *ptr2 = str2;
+	int j;
+	char **env_ = environ;
+	(void)arg;
 
-	while (*ptr2)
+	for (j = 0; env_[j]; j++)
 	{
-		*ptr1 = *ptr2;
-		ptr1++;
-		ptr2++;
-	}
-	*ptr1 = '\0';
-	return (str1);
-
-}
-/**
- * words_num - The number of words in a string
- * @str: string
- *
- * Return: number of words
- */
-int words_num(char *str)
-{
-	int i = 0;
-	char *ptr;
-
-	if (str)
-	{
-		ptr = str;
-		while (*ptr)
-		{
-			if (*ptr != ' ' && (*(ptr + 1) == ' ' || *(ptr + 1) == '\0'))
-				i++;
-			ptr++;
-		}
-	}
-	return (i);
-}
-/**
- * is_number - checks if a string is a number
- * @str: string
- *
- * Return: 0 || 1
- */
-int is_number(char *str)
-{
-	while (*str)
-	{
-		if (*str < '0' || *str > '9')
-			return (0);
-		str++;
-	}
-	return (1);
-}
-/**
- * _strncmp - compares strings checking for a match
- * @str1: first string
- * @str2: second string
- * @len: str length
- *
- * Return: 1 || 0 if strings don't match
- */
-int _strncmp(char *str1, char *str2, size_t len)
-{
-	size_t i = 0;
-	char *ptr1 = str1, *ptr2 = str2;
-
-	if (ptr1 && ptr2)
-	{
-		while (i < len)
-		{
-			if (*ptr2 != *ptr1)
-				return (1);
-			ptr1++;
-			ptr2++;
-			i++;
-		}
+		_puts(env_[j]);
+		_putchar(10);
 	}
 	return (0);
 }

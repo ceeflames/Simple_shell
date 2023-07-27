@@ -1,81 +1,94 @@
 #include "shell.h"
 
 /**
- * _handlesignal - Signal handler
- * @sig: signal
+ * sig_handler - Handle signal
+ * @sig: Signal
  */
-
-void _handlesignal(int sig)
+void sig_handler(int sig)
 {
 	(void)sig;
 
-	signal(SIGINT, _handlesignal);
-	free(buff);
+	signal(SIGINT, sig_handler);
+	free(buf);
 	_putchar(10);
+	exit(EXIT_SUCCESS);
 }
 /**
- * main - Entry point
- * @argc: Argument count
- * @argv: Argument vector
- * @env: environment
- *
+ * main - entry point of thr program
+ * @ac: Argument count
+ * @av: Argument value
+ * @env: Environment to use
  * Return: 0
  */
-int main(int argc, char **argv, char **env)
+int main(int ac __attribute__((unused)), char **av, char **env)
 {
-	int j = 0, flags = 0, _exit = 0, _terminal = isatty(STDIN_FILENO), i;
-	size_t _arr = 0;
-	char *s = "$ ", **a = NULL, (*h)(char **a), *pt = NULL, *fl = argv[0];
-	(void)argc;
+	int i = 0, j, flag = 0, is_terminal = isatty(STDIN_FILENO), exit_ = 0;
+	char *p = "$ ", **arg = NULL, (*fun)(char **arg), *name = av[0], *pth = NULL;
+	size_t arr_size = 0;
 
+	signal(SIGINT, sig_handler);
+	buf = NULL;
 	while (1)
 	{
-		if (_terminal)
-			_put(s);
-		j = getline(&buff, &_arr, stdin);
-		getline_check(j, buff);
-		if (buffchecker(buff))
+		if (is_terminal)
+			_puts(p);
+		i = getline(&buf, &arr_size, stdin);
+		getlinecheck(i, buf);
+		if (bufcheck(buf))
 			continue;
-		buff[j - 1] = '\0';
-		a = _parse(buff);
-		if (!a[0])
+		buf[i - 1] = '\0';
+		arg = parse_input(buf);
+		if (!arg[0])
 		{
-			free_buff(a);
+			free_buf(arg);
 			continue;
 		}
-		pt = path(a[0]);
-		i = exitcheck(a, buff, &flags);
-		if (i)
-			return (flags ? _exit : i);
-		if (!pt)
+		pth = path(arg[0]);
+		j = exitcheck(arg, buf, &flag);
+		if (j)
+			return (flag ? exit_ : j);
+		if (!pth)
 		{
-			h = interpret_func(a[0]);
-			if (h)
-				h(a);
+			fun = interpret_func(arg[0]);
+			if (fun)
+				fun(arg);
 			else
-				perror(fl);
+				perror(name);
 		}
 		else
-			_exit = exec(pt, a, env);
-		free(pt);
-		free_buff(a);
+			exit_ = execute(pth, arg, env);
+		free(pth);
+		free_buf(arg);
 	}
-	free(buff);
+	free(buf);
 	return (0);
 }
 /**
- * pid_return_value - Expand $$ and $?
- * @patt: pattern
- *
- * Return: pid || return value
+ * getlinecheck - checks the return value of getline
+ * @n: return value
+ * @buf: memory management
  */
-int pid_return_value(char *patt)
+void getlinecheck(int n, char *buf)
 {
-	if (_strcmp(patt, "$$"))
+	if (n == -1)
+	{
+		free(buf);
+		exit(EXIT_SUCCESS);
+	}
+}
+/**
+ * get_pid_and_return_value - Expand $$ and $? variable arguments
+ * @commandpattern: Variable pattern to expand
+ *
+ * Return: Int represent parent ID or last return value
+ */
+int get_pid_and_return_value(char *commandpattern)
+{
+	if (_strcmp(commandpattern, "$$"))
 	{
 		return (getppid());
 	}
-	else if (_strcmp(patt, "$?"))
+	else if (_strcmp(commandpattern, "$?"))
 	{
 		return (0);
 	}

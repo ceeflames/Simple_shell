@@ -1,114 +1,101 @@
 #include "shell.h"
 /**
- * buffchecker - check if buffer is empty
- * @buff: buffer
- *
- * Return: 0 || 1 if empty
+ * free_buf - frees the array of command-argument pair
+ * @buf: array
  */
-int buffchecker(char *buff)
+void free_buf(char **buf)
 {
-	if (*buff == '\n' || *(_skipspace(buff)) == '\n')
+	int j = 0;
+
+	while (buf[j])
+		free(buf[j++]);
+	free(buf);
+}
+/**
+ * bufcheck - checks if the buffer is empty
+ * @buf: buffer
+ * Return: 1 if buffer is empty, 0 otherwise
+ */
+int bufcheck(char *buf)
+{
+	if (*buf == '\n' || *(skip_spaces(buf)) == '\n')
 	{
 		return (1);
 	}
 	return (0);
 }
 /**
- * free_buff - Frees array of command-argument pair
- * @buff: array
+ * readcheck - checks the return value of read
+ * @n: number of bytes read from the file stream
+ * @buf: array containing input read from file
+ * @is_terminal: value to determine if input is from stdin or pipe
+ * Return: -1 if read is unsucessful, 1 if read is sucessful
+ * but EOF is reached, 0 otherwise.
  */
-void free_buff(char **buff)
+int readcheck(int n, char *buf, int is_terminal)
 {
-	int i = 0;
-
-	while (buff[i])
-		free(buff[i++]);
-	free(buff);
-}
-/**
- * _readcheck - For checking return value of read
- * @_terminal:l value when input is from stdin || pipe
- * @n: nnumber of bytes
- * @buff: array
- *
- * Return: 1 (successful) || -1 (failure)
- */
-int _readcheck(int n, char *buff, int _terminal)
-{
-
-	(void)buff;
-
+	(void)buf;
 	if (n <= 0)
 	{
-		if (n == 0 && _terminal)
+		if (n == 0 && is_terminal)
 			_putchar('\n');
 		return (-1);
 	}
 	return (0);
 }
 /**
- * exec - command execution
- * @file_path: filepath
- * @argtoks: array of arguments
- * @env: environment variable list
- *
- * Return: 0 (failure) || 1 (successful)
+ * execute - handles command execution
+ * @filepath: filepath
+ * @arg_tokens: array of arguments
+ * @env: enviroment variable list
+ * Return: 0 if execve is unsuccessful, 1 otherwise
  */
-int exec(char *file_path, char **argtoks, char **env)
+int execute(char *filepath, char **arg_tokens, char **env)
 {
-
 	pid_t my_pid;
 	pid_t child_pid;
-	int status, exit_status = -1;
+	int status, exit_status;
 
-	if (file_path)
+	if (filepath)
 	{
 		my_pid = fork();
 		if (my_pid == 0)
 		{
-			if ((execve(file_path, argtoks, env) == -1))
-			{
-				perror("execve");
-				return (-1);
-			}
+			if ((execve(filepath, arg_tokens, env) == -1))
+				return (0);
 		}
 		else if (my_pid == -1)
 		{
-			perror("fork");
-			return (-1);
+			return (0);
 		}
 		else
 		{
 			child_pid = waitpid(my_pid, &status, 0);
 			if (child_pid == -1)
-			{
-				perror("waitpid");
-				return (-1);
-			}
-
+				return (0);
 			if (WIFEXITED(status))
-                                exit_status = WEXITSTATUS(status);
-                        else if (WIFSIGNALED(status))
-                                exit_status = WTERMSIG(status);
+				exit_status = WEXITSTATUS(status);
+			else if (WIFSIGNALED(status))
+				exit_status = WTERMSIG(status);
 		}
 		return (exit_status);
 	}
 	return (1);
 }
-/**
- * _changedir - change directory to path
- * @path: pointer to new path
- *
- * Return: path
- */
-char *_changedir(char *path)
-{
-	char *dir = NULL;
 
-	if (*path == '_')
+/**
+ * changedir - Change directory to given path
+ * @path: pointer to new path
+ * Return: New path
+ */
+char *changedir(char *path)
+{
+	char *prev_dir = NULL;
+
+	if (*path == '-')
 	{
-		dir = _getenv("PWD");
-		if (!chdir(dir))
+		prev_dir = _getenv("PWD");
+		if (!chdir(prev_dir))
 			return (0);
 	}
 	else

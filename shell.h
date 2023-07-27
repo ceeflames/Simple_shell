@@ -1,33 +1,22 @@
 #ifndef SHELL_H
 #define SHELL_H
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <unistd.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <sys/stat.h>
 #include <fcntl.h>
 #include <sys/wait.h>
-#include <sys/stat.h>
-#include <limits.h>
-#include <string.h>
-#include <sys/types.h>
-#include <errno.h>
 #include <signal.h>
+#define BUFSIZE 50
 extern char **environ;
-char *buff;
-#define MAXSIZE 50
-
-
-int _putchar(char c);
-int _put(char *str);
-void getline_check(int i, char *buff);
-void _handlesignal(int sig);
-
+char *buf;
 typedef struct var
 {
 	char *str;
 	char (*func_ptr)(char **arg);
-} _varfunc;
-
+} var_func;
 typedef struct env_var
 {
 	char *key;
@@ -35,33 +24,34 @@ typedef struct env_var
 	char *value;
 	struct env_var *next;
 } env_list;
-
-int buffchecker(char *buff);
-int _atoi(char *str);
-int _strlen(char *str);
-
-char *_skipspace(char *str);
-int word_len(char *str);
+char *skip_spaces(char *str);
+char **parse_input(char *user_input);
+void getlinecheck(int n, char *buf);
+char *path(char *command);
+void sig_handler(int signum);
+char *read_input(void);
 char *_strcat(char *str1, char *str2);
-char *_strcpy(char *str1, char *str2);
 char *_strcpyp(char *str1, char *str2);
-int words_num(char *str);
-int is_number(char *str);
-char **_parse(char *user_input);
-void free_buff(char **buff);
-int _readcheck(int n, char *buff, int _terminal);
-int exec(char *file_path, char **argtoks, char **env);
-char *path(char *cmd);
-char setenv_func(char **argtoks);
-char (*interpret_func(char *arg_cmd))(char **arg);
-int exitcheck(char **argtoks, char *buff, int *flag);
+char *_strcpy(char *str1, char *str2);
 int _strcmp(char *str1, char *str2);
-int _strncmp(char *str1, char *str2, size_t len);
-char *_getenv(char *key);
-char *_strtok(char *str, char *delim);
-char env_func(char **arg);
+int wordlen(char *str);
+int _strlen(char *str);
+int num_words(char *str);
+ssize_t _getline(char **lineptr, size_t *n, FILE *stream);
+char (*interpret_func(char *arg_command))(char **arg);
+int _strcmp(char *str1, char *str2);
 char *_strdup(char *str);
-
-int main(int argc, char **argv, char **env);
-int pid_return_value(char *patt);
+char *_getenv(char *key);
+int _atoi(char *s);
+char *_strtok(char *str, char *delim);
+void free_buf(char **buf);
+int bufcheck(char *buf);
+int readcheck(int n, char *buf, int is_terminal);
+int exitcheck(char **arg_tokens, char *buf, int *flag);
+int execute(char *filepath, char **arg_tokens, char **env);
+int _putchar(char c);
+int _puts(char *str);
+char setenv_func(char **arg);
+char env_func(char **arg);
+int _isnumber(char *c);
 #endif
